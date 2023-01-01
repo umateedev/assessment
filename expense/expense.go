@@ -7,3 +7,7 @@ type Expense struct {
 	Note   string   `json:"note"`
 	Tags   []string `json:"tags"`
 }
+
+type Error struct {
+	Message string `json:"message"`
+}
