@@ -24,8 +24,6 @@ func InitDb() {
 		log.Fatal("Connect to database error", err)
 	}
 
-	defer Db.Close()
-
 	createTb := `
 	CREATE TABLE IF NOT EXISTS expenses
 	(
