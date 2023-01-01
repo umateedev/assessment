@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -35,11 +36,27 @@ func TestCreateExponse(t *testing.T) {
 	assert.Equal(t, []string{"foo", "bar"}, e.Tags)
 }
 
-func seedExponse(t *testing.T) Expense {
+func TestGetExponse(t *testing.T) {
+	e := seedExpense(t)
+
+	var latest Expense
+
+	res := request(http.MethodGet, uri("expenses", strconv.Itoa(e.Id)), nil)
+	err := res.Decode(&latest)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, e.Id, latest.Id)
+	assert.NotEmpty(t, latest.Amount)
+	assert.NotEmpty(t, latest.Note)
+	assert.NotEmpty(t, latest.Tags)
+}
+
+func seedExpense(t *testing.T) Expense {
 	var c Expense
 	body := bytes.NewBufferString(`{
 		"title": "seed expense",
-		"amount": 79,
+		"amount": 79.0,
 		"note": "test note", 
 		"tags": ["food", "beverage"]
 	}`)

@@ -39,7 +39,10 @@ func main() {
 
 	e.GET("/", landingPage)
 	e.GET("/health", health.HealthCheck)
-	e.POST("/expenses", expense.CreateExpenseHandler)
+
+	g := e.Group("expenses")
+	g.POST("", expense.CreateExpenseHandler)
+	g.GET("/:id", expense.GetExpenseHandler)
 
 	log.Printf("Server start at port %s", port)
 
