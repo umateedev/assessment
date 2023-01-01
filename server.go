@@ -14,6 +14,7 @@ import (
 	"github.com/labstack/gommon/log"
 	_ "github.com/lib/pq"
 	"github.com/umateedev/assessment/database"
+	"github.com/umateedev/assessment/expense"
 	"github.com/umateedev/assessment/health"
 )
 
@@ -38,6 +39,7 @@ func main() {
 
 	e.GET("/", landingPage)
 	e.GET("/health", health.HealthCheck)
+	e.POST("/expenses", expense.CreateExpenseHandler)
 
 	log.Printf("Server start at port %s", port)
 
