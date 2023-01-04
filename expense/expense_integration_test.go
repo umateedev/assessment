@@ -52,6 +52,19 @@ func TestGetExponse(t *testing.T) {
 	assert.NotEmpty(t, result.Tags)
 }
 
+func TestGetAllExponse(t *testing.T) {
+	seedExpense(t)
+
+	var result []Expense
+
+	res := request(http.MethodGet, uri("expenses"), nil)
+	err := res.Decode(&result)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.NotEqual(t, 0, len(result))
+}
+
 func TestUpdateExponse(t *testing.T) {
 	old := seedExpense(t)
 

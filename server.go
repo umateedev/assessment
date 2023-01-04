@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"database/sql"
 	"net/http"
 	"os"
@@ -40,10 +41,11 @@ func main() {
 	e.GET("/", landingPage)
 	e.GET("/health", health.HealthCheck)
 
-	g := e.Group("expenses")
+	g := e.Group("expenses", middleware.BasicAuth(basicAuth))
 	g.POST("", expense.CreateExpenseHandler)
-	g.GET("/:id", expense.GetExpenseHandler)
+	g.GET("/:id", expense.GetExpenseByIdHandler)
 	g.PUT("/:id", expense.UpdateExpenseHandler)
+	g.GET("", expense.GetAllExpenseHandler)
 
 	log.Printf("Server start at port %s", port)
 
@@ -67,4 +69,15 @@ func main() {
 
 func landingPage(c echo.Context) error {
 	return c.String(http.StatusOK, "Welcome to Expenses API")
+}
+
+func basicAuth(username, password string, c echo.Context) (bool, error) {
+	// Be careful to use constant time comparison to prevent timing attacks
+	log.Printf(username)
+
+	if subtle.ConstantTimeCompare([]byte(username), []byte("November 10")) == 1 &&
+		subtle.ConstantTimeCompare([]byte(password), []byte("2009")) == 1 {
+		return true, nil
+	}
+	return false, nil
 }
