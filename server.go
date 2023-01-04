@@ -43,6 +43,7 @@ func main() {
 	g := e.Group("expenses")
 	g.POST("", expense.CreateExpenseHandler)
 	g.GET("/:id", expense.GetExpenseHandler)
+	g.PUT("/:id", expense.UpdateExpenseHandler)
 
 	log.Printf("Server start at port %s", port)
 
