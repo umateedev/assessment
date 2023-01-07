@@ -42,7 +42,7 @@ func TestUpdateExpense_ReturnBadRequest_WhenPathMissingId(t *testing.T) {
 		"note": "night market promotion discount 10 bath", 
 		"tags": ["food", "beverage"]
 	}`
-	req := httptest.NewRequest(http.MethodPut, "/expenses", strings.NewReader(body))
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
