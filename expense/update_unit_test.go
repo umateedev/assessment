@@ -14,7 +14,7 @@ import (
 	"github.com/umateedev/assessment/database"
 )
 
-func TestCreateExpense_ReturnBadRequest_WhenInvalidRequest(t *testing.T) {
+func TestUpdateExpense_ReturnBadRequest_WhenInvalidRequest(t *testing.T) {
 	e := echo.New()
 	body := `{
 		"title": "strawberry smoothie",
@@ -22,20 +22,19 @@ func TestCreateExpense_ReturnBadRequest_WhenInvalidRequest(t *testing.T) {
 		"note": "night market promotion discount 10 bath", 
 		"tags": "food"
 	}`
-	req := httptest.NewRequest(http.MethodPost, "/expenses", strings.NewReader(body))
+	req := httptest.NewRequest(http.MethodPut, "/expenses", strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
-
 	c := e.NewContext(req, rec)
 
-	err := CreateExpenseHandler(c)
+	err := UpdateExpenseHandler(c)
 
 	if assert.NoError(t, err) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 
-func TestCreateExpense_ReturnInternalServerError_WhenInsertFailed(t *testing.T) {
+func TestUpdateExpense_ReturnBadRequest_WhenPathMissingId(t *testing.T) {
 	e := echo.New()
 	body := `{
 		"title": "strawberry smoothie",
@@ -43,7 +42,30 @@ func TestCreateExpense_ReturnInternalServerError_WhenInsertFailed(t *testing.T) 
 		"note": "night market promotion discount 10 bath", 
 		"tags": ["food", "beverage"]
 	}`
-	req := httptest.NewRequest(http.MethodPost, "/expenses", strings.NewReader(body))
+	req := httptest.NewRequest(http.MethodPut, "/expenses", strings.NewReader(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/expense/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("")
+
+	err := UpdateExpenseHandler(c)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	}
+}
+
+func TestUpdateExpense_ReturnInternalServerError_WhenUpdateFailed(t *testing.T) {
+	e := echo.New()
+	body := `{
+		"title": "strawberry smoothie",
+		"amount": 79,
+		"note": "night market promotion discount 10 bath", 
+		"tags": ["food", "beverage"]
+	}`
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
@@ -54,8 +76,11 @@ func TestCreateExpense_ReturnInternalServerError_WhenInsertFailed(t *testing.T) 
 	defer db.Close()
 
 	database.Db = db
-	mock.ExpectQuery("INSERT INTO expenses").WillReturnError(sqlmock.ErrCancelled)
+	mock.ExpectQuery("UPDATE expenses").WillReturnError(sqlmock.ErrCancelled)
 	c := e.NewContext(req, rec)
+	c.SetPath("/expense/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("1")
 
 	err = CreateExpenseHandler(c)
 
@@ -64,7 +89,7 @@ func TestCreateExpense_ReturnInternalServerError_WhenInsertFailed(t *testing.T) 
 	}
 }
 
-func TestCreateExpense_ReturnSuccess(t *testing.T) {
+func TestUpdateExpense_ReturnSuccess(t *testing.T) {
 	e := echo.New()
 	body := `{
 		"title": "strawberry smoothie",
@@ -72,11 +97,11 @@ func TestCreateExpense_ReturnSuccess(t *testing.T) {
 		"note": "night market promotion discount 10 bath", 
 		"tags": ["food", "beverage"]
 	}`
-	req := httptest.NewRequest(http.MethodPost, "/expenses", strings.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
-	newExpense := sqlmock.NewRows([]string{"Id"}).AddRow("1")
+	updatedExpense := sqlmock.NewRows([]string{"Id"}).AddRow("1")
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -85,14 +110,18 @@ func TestCreateExpense_ReturnSuccess(t *testing.T) {
 	defer db.Close()
 
 	database.Db = db
-	mock.ExpectQuery("INSERT INTO expenses").WillReturnRows(newExpense)
-	c := e.NewContext(req, rec)
+	mock.ExpectPrepare("UPDATE expenses").ExpectQuery().WillReturnRows(updatedExpense)
 
-	err = CreateExpenseHandler(c)
+	c := e.NewContext(req, rec)
+	c.SetPath("/expense/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	err = UpdateExpenseHandler(c)
 
 	expected := "{\"id\":1,\"title\":\"strawberry smoothie\",\"amount\":79,\"note\":\"night market promotion discount 10 bath\",\"tags\":[\"food\",\"beverage\"]}"
 	if assert.NoError(t, err) {
-		assert.Equal(t, http.StatusCreated, rec.Code)
+		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, expected, strings.TrimSpace(rec.Body.String()))
 	}
 }
