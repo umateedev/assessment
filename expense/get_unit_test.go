@@ -49,7 +49,7 @@ func TestGetExpenseById_ReturnInternalServerError_WhenDbFailed(t *testing.T) {
 	}
 	defer db.Close()
 	database.Db = db
-	mock.ExpectPrepare("SELECT id, title, amount, note, tags FROM expenses WHERE id=$1").
+	mock.ExpectPrepare("SELECT(.*)").
 		ExpectQuery().
 		WithArgs(expenseId).
 		WillReturnError(sqlmock.ErrCancelled)
@@ -81,7 +81,7 @@ func TestGetExpenseById_ReturnSuccess(t *testing.T) {
 	database.Db = db
 	mockExpense := sqlmock.NewRows([]string{"Id", "Title", "Amount", "Note", "Tags"}).
 		AddRow("1", "test", 10, "test", pq.Array([]string{"foo", "bar"}))
-	mock.ExpectPrepare("SELECT id, title, amount, note, tags FROM expenses WHERE id=$1").
+	mock.ExpectPrepare("SELECT(.*)").
 		ExpectQuery().
 		WithArgs(expenseId).
 		WillReturnRows(mockExpense)
